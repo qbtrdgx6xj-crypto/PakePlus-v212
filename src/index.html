@@ -1,32 +1,2000 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="styles.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus App</title>
-        <script type="module" src="/main.js" defer></script>
-    </head>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17班魔丸抽奖系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SimSun', 'STKaiti', serif;
+            background-color: #f5e9d7;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.1"><path d="M0 0h100v100H0z" fill="none"/><path d="M20 20h60v60H20z" stroke="%23a67c52" stroke-width="2" fill="none"/></svg>');
+            color: #5c3713;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background-color: #fff8e1;
+            border: 15px solid #a67c52;
+            border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect x="0" y="0" width="50" height="50" fill="%23a67c52" stroke="%235c3713" stroke-width="2"/></svg>') 30 round;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            position: relative;
+            margin-top: 30px;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px solid #8b5a2b;
+            pointer-events: none;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #a67c52;
+            padding-bottom: 15px;
+            position: relative;
+        }
+        
+        .time-display {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8b4513;
+            background-color: #f9f3e9;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #a67c52;
+        }
+        
+        .main-title {
+            font-size: 52px;
+            color: #8b0000;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .sub-title {
+            font-size: 32px;
+            color: #8b4513;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            letter-spacing: 3px;
+        }
+        
+        .display-area {
+            text-align: center;
+            margin: 30px 0;
+            padding: 40px;
+            background-color: #f9f3e9;
+            border: 8px double #a67c52;
+            border-radius: 5px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .current-name {
+            font-size: 72px;
+            color: #8b0000;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .current-name.highlight {
+            color: #b22222;
+            transform: scale(1.1);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+        
+        .current-name.picked-animation {
+            animation: namePicked 2s ease-in-out;
+        }
+        
+        /* 刘宸铭特殊动画 */
+        .current-name.liuchenming {
+            animation: liuchenmingSpecial 3s ease-in-out;
+        }
+        
+        @keyframes namePicked {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.4); }
+            50% { transform: scale(1.3); }
+            75% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes liuchenmingSpecial {
+            0% { transform: scale(1) rotate(0deg); color: #8b0000; }
+            25% { transform: scale(1.5) rotate(90deg); color: #ff0000; }
+            50% { transform: scale(1.8) rotate(180deg); color: #ff4500; }
+            75% { transform: scale(1.5) rotate(270deg); color: #ff0000; }
+            100% { transform: scale(1) rotate(360deg); color: #8b0000; }
+        }
+        
+        /* 全屏名字特效 */
+        .fullscreen-name {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            animation: fullscreenName 3s ease-in-out forwards;
+        }
+        
+        .fullscreen-name span {
+            font-size: 120px;
+            color: #ffd700;
+            text-shadow: 0 0 20px #ff0000, 0 0 30px #ff4500;
+            font-weight: bold;
+            letter-spacing: 10px;
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes fullscreenName {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #ff0000, 0 0 30px #ff4500; }
+            to { text-shadow: 0 0 30px #ffd700, 0 0 40px #ffa500; }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.7;
+            animation: confetti-fall 5s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+        
+        button {
+            padding: 18px 50px;
+            font-size: 28px;
+            font-family: 'SimSun', 'STKaiti', serif;
+            background-color: #8b4513;
+            color: #fff8e1;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover {
+            background-color: #a0522d;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        button::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::after {
+            left: 100%;
+        }
+        
+        .lists-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .list {
+            flex: 1;
+            background-color: #f9f3e9;
+            border: 3px solid #a67c52;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .list h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #8b4513;
+            border-bottom: 1px solid #a67c52;
+            padding-bottom: 8px;
+        }
+        
+        .name-list {
+            list-style-type: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .name-item {
+            background-color: #e6d2b5;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #a67c52;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .name-item:hover {
+            background-color: #d4b78c;
+        }
+        
+        .remaining .name-item {
+            background-color: #e6d2b5;
+        }
+        
+        .picked .name-item {
+            background-color: #d4b78c;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #8b5a2b;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .settings {
+            margin-top: 20px;
+            text-align: center;
+            padding: 10px;
+            background-color: #f9f3e9;
+            border-radius: 8px;
+            border: 2px solid #a67c52;
+        }
+        
+        .settings label {
+            font-size: 16px;
+            color: #5c3713;
+        }
+        
+        /* 概率调节模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #fff8e1;
+            padding: 30px;
+            border-radius: 10px;
+            border: 5px solid #a67c52;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #a67c52;
+            padding-bottom: 10px;
+        }
+        
+        .modal-header h2 {
+            color: #8b4513;
+        }
+        
+        .probability-control {
+            margin: 20px 0;
+        }
+        
+        .probability-slider {
+            width: 100%;
+            height: 25px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e6d2b5;
+            border-radius: 5px;
+            outline: none;
+            border: 1px solid #a67c52;
+        }
+        
+        .probability-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #8b4513;
+            cursor: pointer;
+        }
+        
+        .probability-slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #8b4513;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .probability-value {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+            color: #8b4513;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+        
+        /* 新增功能区域 */
+        .special-modes {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .special-modes button {
+            padding: 12px 24px;
+            font-size: 20px;
+        }
+        
+        .special-note {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            color: #8b4513;
+            font-style: italic;
+        }
+        
+        .custom-draw {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .custom-draw input {
+            padding: 8px 12px;
+            font-size: 18px;
+            width: 60px;
+            text-align: center;
+            border: 2px solid #a67c52;
+            border-radius: 4px;
+            background-color: #f9f3e9;
+        }
+        
+        .custom-draw span {
+            font-size: 18px;
+            color: #5c3713;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            font-size: 18px;
+            color: #8b4513;
+        }
+        
+        /* 更多选项样式 */
+        .more-options {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .more-options button {
+            padding: 12px 24px;
+            font-size: 20px;
+            background-color: #5c3713;
+        }
+        
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .game-item {
+            background-color: #e6d2b5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #a67c52;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .game-item:hover {
+            background-color: #d4b78c;
+            transform: translateY(-3px);
+        }
+        
+        .game-item h3 {
+            color: #8b4513;
+            margin-bottom: 8px;
+        }
+        
+        .game-item p {
+            color: #5c3713;
+            font-size: 14px;
+        }
+        
+        .import-section {
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .import-section textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 2px solid #a67c52;
+            border-radius: 5px;
+            background-color: #f9f3e9;
+            font-family: 'SimSun', 'STKaiti', serif;
+            resize: vertical;
+        }
+        
+        .quick-import {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        
+        .quick-import button {
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+        
+        .credit {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        /* 题目模态框 */
+        .question-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .question-content {
+            background-color: #fff8e1;
+            padding: 30px;
+            border-radius: 10px;
+            border: 5px solid #a67c52;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .question-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #a67c52;
+            padding-bottom: 10px;
+        }
+        
+        .question-header h2 {
+            color: #8b4513;
+        }
+        
+        .question-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #5c3713;
+        }
+        
+        .book-selection {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .book-selection button {
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+        
+        /* 抽卡页面样式 */
+        .card-draw-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .card-draw-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .card-draw-header h2 {
+            color: #ffd700;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .card-draw-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .card-draw-controls input {
+            padding: 10px;
+            font-size: 18px;
+            width: 80px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .card-draw-controls button {
+            background-color: #ffd700;
+            color: #8b4513;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .card-draw-controls button:hover {
+            background-color: #ffed4a;
+            transform: scale(1.05);
+        }
+        
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            max-width: 1000px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .card {
+            width: 120px;
+            height: 180px;
+            background: linear-gradient(135deg, #6a0dad, #8a2be2);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .card:hover::before {
+            opacity: 1;
+        }
+        
+        .card.drawn {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+        }
+        
+        .card.undrawn {
+            opacity: 0.5;
+            filter: grayscale(0.7);
+        }
+        
+        .card-back {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            transition: transform 0.6s;
+        }
+        
+        .card-front {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6a0dad, #8a2be2);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 16px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            transition: transform 0.6s;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .card.flipped .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .card.flipped .card-front {
+            transform: rotateY(0deg);
+        }
+        
+        .close-card-draw {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10001;
+        }
+        
+        @media (max-width: 768px) {
+            .lists-container {
+                flex-direction: column;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .special-modes {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .current-name {
+                font-size: 48px;
+            }
+            
+            .display-area {
+                padding: 30px 15px;
+                min-height: 180px;
+            }
+            
+            .main-title {
+                font-size: 36px;
+            }
+            
+            .sub-title {
+                font-size: 24px;
+            }
+            
+            .fullscreen-name span {
+                font-size: 60px;
+            }
+            
+            .custom-draw {
+                flex-wrap: wrap;
+            }
+            
+            .quick-import {
+                flex-direction: column;
+            }
+            
+            .time-display {
+                position: static;
+                transform: none;
+                margin-top: 10px;
+            }
+            
+            .card {
+                width: 100px;
+                height: 150px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="main-title">孩子，该你了</h1>
+            <h2 class="sub-title">17班抽签系统</h2>
+            <div class="time-display" id="timeDisplay"></div>
+        </header>
+        
+        <div class="stats">
+            <div>总人数: <span id="totalCount">0</span></div>
+            <div>男生: <span id="boyCount">0</span></div>
+            <div>女生: <span id="girlCount">0</span></div>
+            <div>未抽: <span id="remainingCount">0</span></div>
+        </div>
+        
+        <div class="display-area">
+            <div class="current-name" id="currentName">点击开始按钮</div>
+        </div>
+        
+        <div class="buttons">
+            <button id="startBtn">开始抽签</button>
+            <button id="resetBtn">重置名单</button>
+            <button id="cardDrawBtn">抽卡模式</button>
+        </div>
+        
+        <!-- 新增功能区域 -->
+        <div class="special-modes">
+            <button id="drawOneGirl">只抽1个女孩</button>
+            <button id="drawOneBoy">只抽1个男孩</button>
+            <div class="special-note">提示：抽取男孩/女孩时无需点击停止，直接再次点击按钮即可</div>
+        </div>
+        
+        <div class="custom-draw">
+            <input type="number" id="boyNum" min="1" max="10" value="1">
+            <span>个男孩</span>
+            <input type="number" id="girlNum" min="1" max="10" value="1">
+            <span>个女孩</span>
+            <button id="customDrawBtn">开始抽取</button>
+        </div>
+        
+        <div class="settings">
+            <label>
+                <input type="checkbox" id="voiceToggle" checked> 启用语音提醒
+            </label>
+            <label style="margin-left: 20px;">
+                <input type="checkbox" id="soundToggle" checked> 启用音效
+            </label>
+        </div>
+        
+        <div class="more-options">
+            <button id="moreBtn">更多选项</button>
+        </div>
+        
+        <div class="lists-container">
+            <div class="list remaining">
+                <h2>未抽名单</h2>
+                <ul class="name-list" id="remainingList"></ul>
+            </div>
+            
+            <div class="list picked">
+                <h2>已抽名单</h2>
+                <ul class="name-list" id="pickedList"></ul>
+            </div>
+        </div>
+        
+        <footer>
+            <p>17班魔丸抽奖系统</p>
+        </footer>
+    </div>
+    
+    <!-- 概率调节模态框 -->
+    <div class="modal" id="probabilityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalName">姓名</h2>
+            </div>
+            <div class="probability-control">
+                <p>调整被抽中概率：</p>
+                <input type="range" min="1" max="100" value="10" class="probability-slider" id="probabilitySlider">
+                <div class="probability-value" id="probabilityValue">10%</div>
+            </div>
+            <div class="modal-buttons">
+                <button id="saveProbability">保存</button>
+                <button id="cancelProbability">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 更多选项模态框 -->
+    <div class="modal" id="moreModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>更多选项</h2>
+            </div>
+            
+            <div class="game-list">
+                <h3>教学游戏与活动</h3>
+                
+                <div class="game-item" id="wordChainGame">
+                    <h3>成语接龙</h3>
+                    <p>随机抽取学生进行成语接龙游戏，锻炼语文词汇能力</p>
+                </div>
+                
+                <div class="game-item" id="sentenceTranslation">
+                    <h3>中英互译</h3>
+                    <p>随机抽取学生翻译中英文句子，提高语言转换能力</p>
+                </div>
+                
+                <div class="game-item" id="vocabularyChallenge">
+                    <h3>词汇挑战</h3>
+                    <p>随机抽取学生解释或使用指定词汇，扩展词汇量</p>
+                </div>
+                
+                <div class="game-item" id="rolePlay">
+                    <h3>角色扮演</h3>
+                    <p>随机抽取学生进行英语对话或情景表演</p>
+                </div>
+                
+                <div class="game-item" id="quickResponse">
+                    <h3>快速问答</h3>
+                    <p>随机抽取学生回答语文或英语问题，训练反应能力</p>
+                </div>
+            </div>
+            
+            <div class="import-section">
+                <h3>导入学生名单</h3>
+                
+                <div class="quick-import">
+                    <button id="class17Btn">17班名单</button>
+                    <button id="class3Btn">3班名单</button>
+                </div>
+                
+                <p>请按以下格式输入学生名单（每行一个学生，格式：姓名 性别）：</p>
+                <textarea id="importTextarea" placeholder="例如：
+张三 男
+李四 女
+王五 男"></textarea>
+                <div class="modal-buttons">
+                    <button id="importBtn">导入名单</button>
+                    <button id="exportBtn">导出当前名单</button>
+                </div>
+            </div>
+            
+            <div class="credit">
+                by 王俊涵
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="closeMoreModal">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 题目模态框 -->
+    <div class="question-modal" id="questionModal">
+        <div class="question-content">
+            <div class="question-header">
+                <h2 id="questionTitle">题目</h2>
+            </div>
+            
+            <div class="book-selection">
+                <button id="book1Btn">必修一【BETA】</button>
+                <button id="book2Btn">必修二[BETA]</button>
+            </div>
+            
+            <div class="question-text" id="questionText">
+                题目内容将在这里显示
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="nextQuestionBtn">下一题</button>
+                <button id="closeQuestionBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 抽卡页面 -->
+    <div class="card-draw-page" id="cardDrawPage">
+        <button class="close-card-draw" id="closeCardDraw">×</button>
+        
+        <div class="card-draw-header">
+            <h2>抽卡模式【BETA】</h2>
+            <p>选择要抽取的卡牌数量，点击开始抽卡[BETA]</p>
+        </div>
+        
+        <div class="card-draw-controls">
+            <input type="number" id="cardCount" min="1" max="20" value="5">
+            <button id="startCardDraw">开始抽卡[BETA]</button>
+            <button id="resetCardDraw">重置卡牌</button>
+        </div>
+        
+        <div class="cards-container" id="cardsContainer">
+            <!-- 卡牌将在这里动态生成 -->
+        </div>
+    </div>
 
-    <body>
-        <main class="container">
-            <h1>Welcome to PakePlus</h1>
-            <form class="row" id="greet-form">
-                <input id="inputValue" placeholder="Enter a something..." />
-            </form>
-            <div class="resultBox">
-                <span>result: </span>
-                <span id="result"></span>
-            </div>
-            <div class="invokeBox">
-                <button id="openUrl">open_url_browser</button>
-                <button id="openUrlNew">open_url_new</button>
-                <button id="runCommand">run_command</button>
-                <button id="downloadFile">download_file</button>
-                <button id="getExeDir">get_exe_dir</button>
-                <button id="getEnvVar">get_env_var</button>
-                <button id="findPort">find_port</button>
-            </div>
-        </main>
-    </body>
+    <script>
+        // 17班名单
+        const class17Names = [
+            { name: "邱祉梦", gender: "女" },
+            { name: "李航", gender: "男" },
+            { name: "刘润萱", gender: "女" },
+            { name: "李怡衡", gender: "女" },
+            { name: "杨滢睿", gender: "女" },
+            { name: "佟嘉鑫", gender: "男" },
+            { name: "霍佳鑫", gender: "女" },
+            { name: "李政泽", gender: "男" },
+            { name: "丁子阔", gender: "男" },
+            { name: "霍鑫妍", gender: "女" },
+            { name: "李沂洋", gender: "女" },
+            { name: "田贺明", gender: "男" },
+            { name: "王馨源", gender: "男" },
+            { name: "闫晶诒", gender: "女" },
+            { name: "陈彦滔", gender: "男" },
+            { name: "丁一寒", gender: "女" },
+            { name: "鲁兴家", gender: "女" },
+            { name: "毕雪菲", gender: "女" },
+            { name: "张佳森", gender: "男" },
+            { name: "李函凌", gender: "女" },
+            { name: "孙聆棋", gender: "女" },
+            { name: "刘炎彬", gender: "男" },
+            { name: "王昱博", gender: "男" },
+            { name: "张煊雅", gender: "女" },
+            { name: "许恒毓", gender: "男" },
+            { name: "强诗涵", gender: "女" },
+            { name: "李欣洹", gender: "女" },
+            { name: "刘航琦", gender: "男" },
+            { name: "孙淼", gender: "女" },
+            { name: "张贺瑞", gender: "男" },
+            { name: "马鑫博", gender: "男" },
+            { name: "刘宸铭", gender: "男" },
+            { name: "卢虹羽", gender: "男" },
+            { name: "赵茉涵", gender: "女" },
+            { name: "陈勃霏", gender: "男" },
+            { name: "商根皓", gender: "男" },
+            { name: "李宜佳", gender: "女" },
+            { name: "王俊涵", gender: "男" },
+            { name: "徐梓航", gender: "男" },
+            { name: "张朕搏", gender: "男" },
+            { name: "李欣航", gender: "男" },
+            { name: "王浩源", gender: "女" },
+            { name: "郭轩铭", gender: "男" },
+            { name: "解凯文", gender: "男" },
+            { name: "隋璐伊", gender: "女" },
+            { name: "翟若汐", gender: "女" },
+            { name: "张涵菲", gender: "女" },
+            { name: "杨越婷", gender: "女" },
+            { name: "张琪然", gender: "女" },
+            { name: "杨凯哲", gender: "男" },
+            { name: "郭鑫", gender: "男" },
+            { name: "李美含", gender: "女" },
+            { name: "支星迪", gender: "男" }
+        ];
+        
+        // 3班名单（初始为空）
+        const class3Names = [];
+        
+        // 创建带有概率的对象数组
+        let nameData = class17Names.map(item => ({
+            ...item,
+            probability: 0.1, // 初始概率为10%
+            picked: false
+        }));
+        
+        // 题目库
+        const questionBank = {
+            book1: {
+                chinese: [
+                    "请解释《沁园春·长沙》中'鹰击长空，鱼翔浅底'的意境",
+                    "《再别康桥》表达了诗人怎样的情感？请简要分析",
+                    "请背诵《诗经·蒹葭》的前四句",
+                    "解释'青青子衿，悠悠我心'的含义及其在《诗经》中的表达作用",
+                    "《赤壁赋》中'寄蜉蝣于天地，渺沧海之一粟'体现了作者怎样的人生观？",
+                    "请简要分析《林黛玉进贾府》中林黛玉的性格特点",
+                    "《祝福》中祥林嫂的形象反映了怎样的社会现实？",
+                    "解释成语'守株待兔'的寓意并造句"
+                ],
+                english: [
+                    "Translate the following sentence into Chinese: 'The early bird catches the worm.'",
+                    "What's the difference between 'affect' and 'effect'? Please give examples.",
+                    "Use 'neither...nor...' to make a sentence",
+                    "Explain the usage of present perfect tense with two examples",
+                    "What are the three forms of the verb 'go'?",
+                    "Make a sentence using the comparative form of 'beautiful'",
+                    "Translate into English: 我昨天买了一本很有趣的书",
+                    "What's the Chinese meaning of 'break the ice'?"
+                ]
+            },
+            book2: {
+                chinese: [
+                    "《滕王阁序》中'落霞与孤鹜齐飞，秋水共长天一色'描绘了怎样的画面？",
+                    "请分析《阿房宫赋》的写作目的和主旨",
+                    "背诵《离骚》中你最喜欢的两句并解释其含义",
+                    "《兰亭集序》表达了王羲之怎样的人生感悟？",
+                    "解释'先天下之忧而忧，后天下之乐而乐'的深刻含义",
+                    "《陈情表》中李密是如何表达自己的忠孝之情的？",
+                    "请简要分析《孔雀东南飞》中刘兰芝的形象特点",
+                    "解释成语'刻舟求剑'的寓意"
+                ],
+                english: [
+                    "What's the passive voice of 'They built this house last year'?",
+                    "Explain the difference between 'used to' and 'be used to' with examples",
+                    "Make a conditional sentence (type 2)",
+                    "What are the comparative and superlative forms of 'bad'?",
+                    "Translate into Chinese: 'Actions speak louder than words.'",
+                    "Use 'as soon as' to make a sentence",
+                    "What's the Chinese meaning of 'bite the bullet'?",
+                    "Change this sentence into reported speech: 'I will come tomorrow,' he said."
+                ]
+            }
+        };
+        
+        let isRolling = false;
+        let rollInterval;
+        let currentEditingName = null;
+        let currentBook = "book1"; // 默认必修一
+        let currentGameType = "";
+        
+        const currentNameElement = document.getElementById('currentName');
+        const remainingListElement = document.getElementById('remainingList');
+        const pickedListElement = document.getElementById('pickedList');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const voiceToggle = document.getElementById('voiceToggle');
+        const soundToggle = document.getElementById('soundToggle');
+        const timeDisplay = document.getElementById('timeDisplay');
+        
+        // 新增功能按钮
+        const drawOneGirlBtn = document.getElementById('drawOneGirl');
+        const drawOneBoyBtn = document.getElementById('drawOneBoy');
+        const customDrawBtn = document.getElementById('customDrawBtn');
+        const boyNumInput = document.getElementById('boyNum');
+        const girlNumInput = document.getElementById('girlNum');
+        const moreBtn = document.getElementById('moreBtn');
+        const cardDrawBtn = document.getElementById('cardDrawBtn');
+        
+        // 统计元素
+        const totalCountElement = document.getElementById('totalCount');
+        const boyCountElement = document.getElementById('boyCount');
+        const girlCountElement = document.getElementById('girlCount');
+        const remainingCountElement = document.getElementById('remainingCount');
+        
+        // 模态框元素
+        const probabilityModal = document.getElementById('probabilityModal');
+        const modalName = document.getElementById('modalName');
+        const probabilitySlider = document.getElementById('probabilitySlider');
+        const probabilityValue = document.getElementById('probabilityValue');
+        const saveProbabilityBtn = document.getElementById('saveProbability');
+        const cancelProbabilityBtn = document.getElementById('cancelProbability');
+        
+        // 更多选项模态框元素
+        const moreModal = document.getElementById('moreModal');
+        const importTextarea = document.getElementById('importTextarea');
+        const importBtn = document.getElementById('importBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const closeMoreModal = document.getElementById('closeMoreModal');
+        const class17Btn = document.getElementById('class17Btn');
+        const class3Btn = document.getElementById('class3Btn');
+        
+        // 题目模态框元素
+        const questionModal = document.getElementById('questionModal');
+        const questionTitle = document.getElementById('questionTitle');
+        const questionText = document.getElementById('questionText');
+        const book1Btn = document.getElementById('book1Btn');
+        const book2Btn = document.getElementById('book2Btn');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+        const closeQuestionBtn = document.getElementById('closeQuestionBtn');
+        
+        // 抽卡页面元素
+        const cardDrawPage = document.getElementById('cardDrawPage');
+        const closeCardDraw = document.getElementById('closeCardDraw');
+        const cardCountInput = document.getElementById('cardCount');
+        const startCardDrawBtn = document.getElementById('startCardDraw');
+        const resetCardDrawBtn = document.getElementById('resetCardDraw');
+        const cardsContainer = document.getElementById('cardsContainer');
+        
+        // 游戏元素
+        const wordChainGame = document.getElementById('wordChainGame');
+        const sentenceTranslation = document.getElementById('sentenceTranslation');
+        const vocabularyChallenge = document.getElementById('vocabularyChallenge');
+        const rolePlay = document.getElementById('rolePlay');
+        const quickResponse = document.getElementById('quickResponse');
+        
+        // 音效
+        const rollingSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
+        const stopSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
+        const celebrateSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
+        
+        // 激昂音乐 - 使用在线资源
+        const excitingMusic = new Audio("https://sc.chinaz.com/yinxiao/120504155520.htm");
+        excitingMusic.volume = 0.7;
+        
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // 转换为北京时间
+            const timeString = beijingTime.toISOString().substr(11, 8);
+            timeDisplay.textContent = `北京时间 ${timeString}`;
+        }
+        
+        // 初始化时间显示
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // 初始化名单显示
+        function initializeLists() {
+            updateRemainingList();
+            updatePickedList();
+            updateStats();
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            const total = nameData.length;
+            const boys = nameData.filter(item => item.gender === "男").length;
+            const girls = nameData.filter(item => item.gender === "女").length;
+            const remaining = nameData.filter(item => !item.picked).length;
+            
+            totalCountElement.textContent = total;
+            boyCountElement.textContent = boys;
+            girlCountElement.textContent = girls;
+            remainingCountElement.textContent = remaining;
+        }
+        
+        // 更新未抽名单显示
+        function updateRemainingList() {
+            remainingListElement.innerHTML = '';
+            nameData.filter(item => !item.picked).forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'name-item';
+                li.textContent = item.name;
+                
+                // 添加点击事件，打开概率调节模态框
+                li.addEventListener('click', () => openProbabilityModal(item));
+                
+                remainingListElement.appendChild(li);
+            });
+        }
+        
+        // 更新已抽名单显示
+        function updatePickedList() {
+            pickedListElement.innerHTML = '';
+            nameData.filter(item => item.picked).forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'name-item';
+                li.textContent = item.name;
+                
+                pickedListElement.appendChild(li);
+            });
+        }
+        
+        // 打开概率调节模态框
+        function openProbabilityModal(item) {
+            currentEditingName = item;
+            modalName.textContent = item.name;
+            probabilitySlider.value = Math.round(item.probability * 100);
+            probabilityValue.textContent = `${Math.round(item.probability * 100)}%`;
+            probabilityModal.style.display = 'flex';
+        }
+        
+        // 关闭概率调节模态框
+        function closeProbabilityModal() {
+            probabilityModal.style.display = 'none';
+            currentEditingName = null;
+        }
+        
+        // 打开更多选项模态框
+        function openMoreModal() {
+            moreModal.style.display = 'flex';
+        }
+        
+        // 关闭更多选项模态框
+        function closeMoreModalFunc() {
+            moreModal.style.display = 'none';
+        }
+        
+        // 打开题目模态框
+        function openQuestionModal() {
+            questionModal.style.display = 'flex';
+            showRandomQuestion();
+        }
+        
+        // 关闭题目模态框
+        function closeQuestionModal() {
+            questionModal.style.display = 'none';
+        }
+        
+        // 打开抽卡页面
+        function openCardDrawPage() {
+            cardDrawPage.style.display = 'flex';
+            resetCardDraw();
+        }
+        
+        // 关闭抽卡页面
+        function closeCardDrawPage() {
+            cardDrawPage.style.display = 'none';
+        }
+        
+        // 显示随机题目
+        function showRandomQuestion() {
+            let subject, questions;
+            
+            switch(currentGameType) {
+                case "wordChain":
+                    subject = "chinese";
+                    questionTitle.textContent = "成语接龙";
+                    break;
+                case "translation":
+                    subject = Math.random() > 0.5 ? "chinese" : "english";
+                    questionTitle.textContent = "中英互译";
+                    break;
+                case "vocabulary":
+                    subject = Math.random() > 0.5 ? "chinese" : "english";
+                    questionTitle.textContent = "词汇挑战";
+                    break;
+                case "roleplay":
+                    subject = "english";
+                    questionTitle.textContent = "角色扮演";
+                    break;
+                case "quickresponse":
+                    subject = Math.random() > 0.5 ? "chinese" : "english";
+                    questionTitle.textContent = "快速问答";
+                    break;
+                default:
+                    subject = "chinese";
+            }
+            
+            questions = questionBank[currentBook][subject];
+            const randomIndex = Math.floor(Math.random() * questions.length);
+            questionText.textContent = questions[randomIndex];
+        }
+        
+        // 语音播报
+        function speakText(text) {
+            if (!voiceToggle.checked) return;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // 停止任何正在进行的语音
+                speechSynthesis.cancel();
+                
+                // 播放新语音
+                speechSynthesis.speak(utterance);
+            } else {
+                console.log('您的浏览器不支持语音合成API');
+            }
+        }
+        
+        // 播放音效
+        function playSound(sound) {
+            if (!soundToggle.checked) return;
+            
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("音效播放失败:", e));
+        }
+        
+        // 播放激昂音乐
+        function playExcitingMusic() {
+            if (!soundToggle.checked) return;
+            
+            excitingMusic.currentTime = 0;
+            excitingMusic.play().catch(e => console.log("音乐播放失败:", e));
+            
+            // 10秒后自动停止音乐
+            setTimeout(() => {
+                excitingMusic.pause();
+            }, 10000);
+        }
+        
+        // 创建庆祝动画
+        function createCelebration() {
+            const displayArea = document.querySelector('.display-area');
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = `${Math.random() * 10 + 5}px`;
+                confetti.style.height = `${Math.random() * 10 + 5}px`;
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                displayArea.appendChild(confetti);
+                
+                // 移除元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        // 创建全屏名字特效
+        function createFullscreenName(name) {
+            const fullscreenDiv = document.createElement('div');
+            fullscreenDiv.className = 'fullscreen-name';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+            
+            fullscreenDiv.appendChild(nameSpan);
+            document.body.appendChild(fullscreenDiv);
+            
+            // 3秒后移除全屏特效
+            setTimeout(() => {
+                fullscreenDiv.remove();
+            }, 3000);
+        }
+        
+        // 根据概率权重随机选择
+        function weightedRandomSelect(filterFn = null) {
+            let remainingNames = nameData.filter(item => !item.picked);
+            
+            // 如果有过滤条件，应用过滤
+            if (filterFn) {
+                remainingNames = remainingNames.filter(filterFn);
+            }
+            
+            if (remainingNames.length === 0) {
+                return null;
+            }
+            
+            // 计算总权重
+            const totalWeight = remainingNames.reduce((sum, item) => sum + item.probability, 0);
+            
+            // 生成一个随机数
+            let random = Math.random() * totalWeight;
+            
+            // 根据权重选择
+            for (let i = 0; i < remainingNames.length; i++) {
+                random -= remainingNames[i].probability;
+                if (random <= 0) {
+                    return remainingNames[i];
+                }
+            }
+            
+            // 如果由于浮点数精度问题没有返回，返回最后一个
+            return remainingNames[remainingNames.length - 1];
+        }
+        
+        // 随机抽签
+        function startRolling(filterFn = null) {
+            let remainingNames = nameData.filter(item => !item.picked);
+            
+            // 如果有过滤条件，应用过滤
+            if (filterFn) {
+                remainingNames = remainingNames.filter(filterFn);
+            }
+            
+            if (remainingNames.length === 0) {
+                currentNameElement.textContent = "没有可抽取的人了！";
+                speakText("没有可抽取的人了！");
+                return;
+            }
+            
+            isRolling = true;
+            startBtn.textContent = "停止";
+            
+            // 播放滚动音效
+            playSound(rollingSound);
+            
+            rollInterval = setInterval(() => {
+                const randomItem = weightedRandomSelect(filterFn);
+                if (randomItem) {
+                    currentNameElement.textContent = randomItem.name;
+                    currentNameElement.classList.add('highlight');
+                    
+                    setTimeout(() => {
+                        currentNameElement.classList.remove('highlight');
+                    }, 200);
+                }
+            }, 100);
+        }
+        
+        // 停止抽签
+        function stopRolling(filterFn = null) {
+            clearInterval(rollInterval);
+            isRolling = false;
+            startBtn.textContent = "开始抽签";
+            
+            let remainingNames = nameData.filter(item => !item.picked);
+            
+            // 如果有过滤条件，应用过滤
+            if (filterFn) {
+                remainingNames = remainingNames.filter(filterFn);
+            }
+            
+            if (remainingNames.length > 0) {
+                const pickedItem = weightedRandomSelect(filterFn);
+                
+                if (pickedItem) {
+                    // 标记为已抽
+                    pickedItem.picked = true;
+                    
+                    // 更新显示
+                    currentNameElement.textContent = pickedItem.name;
+                    
+                    // 添加名字放大动画
+                    currentNameElement.classList.add('picked-animation');
+                    
+                    // 如果是刘宸铭，添加特殊动画
+                    if (pickedItem.name === "刘宸铭") {
+                        currentNameElement.classList.add('liuchenming');
+                    }
+                    
+                    // 创建庆祝动画
+                    createCelebration();
+                    
+                    // 播放庆祝音效
+                    playSound(celebrateSound);
+                    
+                    // 播放激昂音乐
+                    playExcitingMusic();
+                    
+                    // 创建全屏名字特效
+                    createFullscreenName(pickedItem.name);
+                    
+                    updateRemainingList();
+                    updatePickedList();
+                    updateStats();
+                    
+                    // 语音播报
+                    speakText(`恭喜${pickedItem.name}被抽到了`);
+                    
+                    // 移除名字放大动画类
+                    setTimeout(() => {
+                        currentNameElement.classList.remove('picked-animation');
+                        currentNameElement.classList.remove('liuchenming');
+                    }, 3000);
+                }
+            }
+        }
+        
+        // 批量抽取
+        function batchDraw(boyCount, girlCount) {
+            // 重置显示
+            currentNameElement.textContent = "批量抽取中...";
+            
+            // 获取未抽取的名单
+            const remainingBoys = nameData.filter(item => !item.picked && item.gender === "男");
+            const remainingGirls = nameData.filter(item => !item.picked && item.gender === "女");
+            
+            // 检查是否有足够的人数
+            if (remainingBoys.length < boyCount || remainingGirls.length < girlCount) {
+                currentNameElement.textContent = "人数不足！";
+                speakText("人数不足！");
+                return;
+            }
+            
+            // 抽取指定数量的男孩
+            const pickedBoys = [];
+            for (let i = 0; i < boyCount; i++) {
+                const boy = weightedRandomSelect(item => !item.picked && item.gender === "男");
+                if (boy) {
+                    boy.picked = true;
+                    pickedBoys.push(boy);
+                }
+            }
+            
+            // 抽取指定数量的女孩
+            const pickedGirls = [];
+            for (let i = 0; i < girlCount; i++) {
+                const girl = weightedRandomSelect(item => !item.picked && item.gender === "女");
+                if (girl) {
+                    girl.picked = true;
+                    pickedGirls.push(girl);
+                }
+            }
+            
+            // 更新显示
+            updateRemainingList();
+            updatePickedList();
+            updateStats();
+            
+            // 显示结果
+            const allPicked = [...pickedBoys, ...pickedGirls];
+            if (allPicked.length > 0) {
+                // 播放激昂音乐
+                playExcitingMusic();
+                
+                // 显示第一个被抽中的人
+                const firstName = allPicked[0].name;
+                currentNameElement.textContent = firstName;
+                
+                // 如果是刘宸铭，添加特殊动画
+                if (firstName === "刘宸铭") {
+                    currentNameElement.classList.add('liuchenming');
+                }
+                
+                createFullscreenName(firstName);
+                
+                // 语音播报
+                let message = "批量抽取完成！";
+                if (boyCount > 0) {
+                    message += `抽取了${boyCount}个男孩：${pickedBoys.map(b => b.name).join('、')}`;
+                }
+                if (girlCount > 0) {
+                    message += `抽取了${girlCount}个女孩：${pickedGirls.map(g => g.name).join('、')}`;
+                }
+                
+                speakText(message);
+                
+                // 如果有多个人，3秒后显示下一个
+                if (allPicked.length > 1) {
+                    let index = 1;
+                    const interval = setInterval(() => {
+                        if (index < allPicked.length) {
+                            const nextName = allPicked[index].name;
+                            currentNameElement.textContent = nextName;
+                            
+                            // 移除之前的动画类
+                            currentNameElement.classList.remove('liuchenming');
+                            
+                            // 如果是刘宸铭，添加特殊动画
+                            if (nextName === "刘宸铭") {
+                                currentNameElement.classList.add('liuchenming');
+                            }
+                            
+                            createFullscreenName(nextName);
+                            index++;
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 3000);
+                }
+            }
+        }
+        
+        // 重置名单
+        function resetLists() {
+            nameData = nameData.map(item => ({
+                ...item,
+                picked: false
+            }));
+            
+            currentNameElement.textContent = "点击开始按钮";
+            updateRemainingList();
+            updatePickedList();
+            updateStats();
+            
+            if (isRolling) {
+                clearInterval(rollInterval);
+                isRolling = false;
+                startBtn.textContent = "开始抽签";
+            }
+        }
+        
+        // 导入名单
+        function importList() {
+            const text = importTextarea.value.trim();
+            if (!text) {
+                alert("请输入学生名单！");
+                return;
+            }
+            
+            const lines = text.split('\n');
+            const newList = [];
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                const parts = line.split(/\s+/);
+                if (parts.length < 2) {
+                    alert(`格式错误: ${line}，请使用"姓名 性别"格式`);
+                    return;
+                }
+                
+                const name = parts[0];
+                const gender = parts[1];
+                
+                if (gender !== "男" && gender !== "女") {
+                    alert(`性别错误: ${line}，性别只能是"男"或"女"`);
+                    return;
+                }
+                
+                newList.push({
+                    name: name,
+                    gender: gender,
+                    probability: 0.1,
+                    picked: false
+                });
+            }
+            
+            if (newList.length > 0) {
+                nameData = newList;
+                resetLists();
+                alert(`成功导入 ${newList.length} 名学生！`);
+                closeMoreModalFunc();
+            }
+        }
+        
+        // 导出名单
+        function exportList() {
+            const text = nameData.map(item => `${item.name} ${item.gender}`).join('\n');
+            importTextarea.value = text;
+            alert("当前名单已复制到导入框中！");
+        }
+        
+        // 快速导入班级名单
+        function quickImportClass(classNames, className) {
+            nameData = classNames.map(item => ({
+                ...item,
+                probability: 0.1,
+                picked: false
+            }));
+            resetLists();
+            alert(`已导入${className}名单！`);
+            closeMoreModalFunc();
+        }
+        
+        // 启动教学游戏
+        function startTeachingGame(gameType) {
+            const remaining = nameData.filter(item => !item.picked);
+            if (remaining.length === 0) {
+                alert("没有可抽取的学生了！");
+                return;
+            }
+            
+            const randomStudent = weightedRandomSelect();
+            if (randomStudent) {
+                currentNameElement.textContent = randomStudent.name;
+                createFullscreenName(randomStudent.name);
+                
+                currentGameType = gameType;
+                openQuestionModal();
+                
+                let message = "";
+                switch(gameType) {
+                    case "wordChain":
+                        message = `${randomStudent.name}，请你开始成语接龙！`;
+                        break;
+                    case "translation":
+                        message = `${randomStudent.name}，请你翻译这个句子！`;
+                        break;
+                    case "vocabulary":
+                        message = `${randomStudent.name}，请你解释这个词语的意思！`;
+                        break;
+                    case "roleplay":
+                        message = `${randomStudent.name}，请你参与角色扮演！`;
+                        break;
+                    case "quickresponse":
+                        message = `${randomStudent.name}，请你快速回答这个问题！`;
+                        break;
+                }
+                
+                speakText(message);
+                closeMoreModalFunc();
+            }
+        }
+        
+        // 抽卡功能
+        let drawnCards = [];
+        
+        function resetCardDraw() {
+            drawnCards = [];
+            cardsContainer.innerHTML = '';
+            
+            // 创建所有学生的卡牌
+            nameData.forEach((student, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                
+                const cardBack = document.createElement('div');
+                cardBack.className = 'card-back';
+                cardBack.textContent = '?';
+                
+                const cardFront = document.createElement('div');
+                cardFront.className = 'card-front';
+                cardFront.textContent = student.name;
+                
+                card.appendChild(cardBack);
+                card.appendChild(cardFront);
+                
+                card.addEventListener('click', () => {
+                    if (!drawnCards.includes(index)) {
+                        drawCard(index);
+                    }
+                });
+                
+                cardsContainer.appendChild(card);
+            });
+        }
+        
+        function drawCard(index) {
+            const card = cardsContainer.querySelector(`.card[data-index="${index}"]`);
+            if (!card || drawnCards.includes(index)) return;
+            
+            drawnCards.push(index);
+            card.classList.add('drawn');
+            
+            // 添加翻转动画
+            setTimeout(() => {
+                card.classList.add('flipped');
+            }, 100);
+            
+            // 更新其他卡牌状态
+            updateUndrawnCards();
+        }
+        
+        function updateUndrawnCards() {
+            const allCards = cardsContainer.querySelectorAll('.card');
+            allCards.forEach(card => {
+                const index = parseInt(card.dataset.index);
+                if (!drawnCards.includes(index)) {
+                    card.classList.add('undrawn');
+                }
+            });
+        }
+        
+        function startCardDraw() {
+            const count = parseInt(cardCountInput.value) || 1;
+            if (count < 1 || count > nameData.length) {
+                alert(`请输入1到${nameData.length}之间的数字`);
+                return;
+            }
+            
+            resetCardDraw();
+            
+            // 随机抽取指定数量的卡牌
+            const availableIndices = Array.from({length: nameData.length}, (_, i) => i);
+            for (let i = 0; i < count; i++) {
+                if (availableIndices.length === 0) break;
+                
+                const randomIndex = Math.floor(Math.random() * availableIndices.length);
+                const cardIndex = availableIndices.splice(randomIndex, 1)[0];
+                
+                setTimeout(() => {
+                    drawCard(cardIndex);
+                }, i * 300);
+            }
+        }
+        
+        // 事件监听
+        startBtn.addEventListener('click', function() {
+            if (isRolling) {
+                stopRolling();
+            } else {
+                startRolling();
+            }
+        });
+        
+        resetBtn.addEventListener('click', resetLists);
+        
+        // 新增功能事件监听
+        drawOneGirlBtn.addEventListener('click', function() {
+            if (isRolling) {
+                stopRolling(item => item.gender === "女");
+            } else {
+                startRolling(item => item.gender === "女");
+            }
+        });
+        
+        drawOneBoyBtn.addEventListener('click', function() {
+            if (isRolling) {
+                stopRolling(item => item.gender === "男");
+            } else {
+                startRolling(item => item.gender === "男");
+            }
+        });
+        
+        customDrawBtn.addEventListener('click', function() {
+            const boyCount = parseInt(boyNumInput.value) || 0;
+            const girlCount = parseInt(girlNumInput.value) || 0;
+            
+            if (boyCount + girlCount === 0) {
+                alert("请至少输入一个数量！");
+                return;
+            }
+            
+            batchDraw(boyCount, girlCount);
+        });
+        
+        // 更多选项事件监听
+        moreBtn.addEventListener('click', openMoreModal);
+        closeMoreModal.addEventListener('click', closeMoreModalFunc);
+        importBtn.addEventListener('click', importList);
+        exportBtn.addEventListener('click', exportList);
+        class17Btn.addEventListener('click', () => quickImportClass(class17Names, "17班"));
+        class3Btn.addEventListener('click', () => {
+            if (class3Names.length === 0) {
+                alert("3班名单为空，请在导入框中编辑3班名单后点击导入按钮");
+                importTextarea.value = "";
+            } else {
+                quickImportClass(class3Names, "3班");
+            }
+        });
+        
+        // 教学游戏事件监听
+        wordChainGame.addEventListener('click', () => startTeachingGame("wordChain"));
+        sentenceTranslation.addEventListener('click', () => startTeachingGame("translation"));
+        vocabularyChallenge.addEventListener('click', () => startTeachingGame("vocabulary"));
+        rolePlay.addEventListener('click', () => startTeachingGame("roleplay"));
+        quickResponse.addEventListener('click', () => startTeachingGame("quickresponse"));
+        
+        // 题目模态框事件监听
+        book1Btn.addEventListener('click', () => {
+            currentBook = "book1";
+            showRandomQuestion();
+        });
+        
+        book2Btn.addEventListener('click', () => {
+            currentBook = "book2";
+            showRandomQuestion();
+        });
+        
+        nextQuestionBtn.addEventListener('click', showRandomQuestion);
+        closeQuestionBtn.addEventListener('click', closeQuestionModal);
+        
+        // 抽卡页面事件监听
+        cardDrawBtn.addEventListener('click', openCardDrawPage);
+        closeCardDraw.addEventListener('click', closeCardDrawPage);
+        startCardDrawBtn.addEventListener('click', startCardDraw);
+        resetCardDrawBtn.addEventListener('click', resetCardDraw);
+        
+        // 概率调节相关事件
+        probabilitySlider.addEventListener('input', function() {
+            probabilityValue.textContent = `${this.value}%`;
+        });
+        
+        saveProbabilityBtn.addEventListener('click', function() {
+            if (currentEditingName) {
+                currentEditingName.probability = parseInt(probabilitySlider.value) / 100;
+                updateRemainingList();
+                closeProbabilityModal();
+            }
+        });
+        
+        cancelProbabilityBtn.addEventListener('click', closeProbabilityModal);
+        
+        // 点击模态框外部关闭
+        probabilityModal.addEventListener('click', function(e) {
+            if (e.target === probabilityModal) {
+                closeProbabilityModal();
+            }
+        });
+        
+        moreModal.addEventListener('click', function(e) {
+            if (e.target === moreModal) {
+                closeMoreModalFunc();
+            }
+        });
+        
+        questionModal.addEventListener('click', function(e) {
+            if (e.target === questionModal) {
+                closeQuestionModal();
+            }
+        });
+        
+        cardDrawPage.addEventListener('click', function(e) {
+            if (e.target === cardDrawPage) {
+                closeCardDrawPage();
+            }
+        });
+        
+        // 初始化
+        initializeLists();
+    </script>
+</body>
 </html>
